@@ -687,7 +687,18 @@ public class TypeCheck extends IRElementVisitor<MJType> {
 	}
 
 	public MJType visitStatement(MJFor e) throws VisitorException {
-		return null;
+		MJType condtype = visitExpression(e.getCondition());
+		MJType ini = visitStatement(e.getInit());
+		
+		if(!condtype.isBoolean())
+			throw new TypeCheckerException("Type of condition must be boolean");
+//		if(!ini.isInt())
+//			throw new TypeCheckerException("The initializing value must be integer");
+
+		visitStatement(e.getIncrement());
+		visitStatement(e.getBlock());
+		
+		return MJType.getVoidType();
 	}
 
 	public MJType visitStatement(MJThrow e) throws VisitorException {
