@@ -688,13 +688,12 @@ public class TypeCheck extends IRElementVisitor<MJType> {
 
 	public MJType visitStatement(MJFor e) throws VisitorException {
 		MJType condtype = visitExpression(e.getCondition());
-		MJType ini = visitStatement(e.getInit());
+		
 		
 		if(!condtype.isBoolean())
 			throw new TypeCheckerException("Type of condition must be boolean");
-//		if(!ini.isInt())
-//			throw new TypeCheckerException("The initializing value must be integer");
 
+		visitStatement(e.getInit());
 		visitStatement(e.getIncrement());
 		visitStatement(e.getBlock());
 		
@@ -706,23 +705,32 @@ public class TypeCheck extends IRElementVisitor<MJType> {
 	}
 
 	public MJType visitStatement(MJPostIncrementStmt e) throws VisitorException {
-		return null;
+		visitExpression(e.getArgument());
+		return MJType.getVoidType();
 	}
 
 	public MJType visitStatement(MJPreIncrementStmt e) throws VisitorException {
-		return null;
+		visitExpression(e.getArgument());
+		return MJType.getVoidType();
 	}
 
 	public MJType visitStatement(MJPostDecrementStmt e) throws VisitorException {
-		return null;
+		visitExpression(e.getArgument());
+		return MJType.getVoidType();
 	}
 
 	public MJType visitStatement(MJPreDecrementStmt e) throws VisitorException {
-		return null;
+		visitExpression(e.getArgument());
+		return MJType.getVoidType();
 	}
 
 	public MJType visitStatement(MJVariableStmt e) throws VisitorException {
-		return null;
+		MJType decl = visitType(e.getDeclaration().getType());
+		MJType ini = visitType(e.getDeclaration().getInitializer().getType());
+		
+		if(!decl.isSame(ini))
+			throw new TypeCheckerException("Declaration (" + decl + ") and Initialisation (" + ini + ") must have the same type.");
+		return decl;
 	}
 
 	public MJType visitExpression(MJGreater e) throws VisitorException {
@@ -747,24 +755,49 @@ public class TypeCheck extends IRElementVisitor<MJType> {
 
 	public MJType visitExpression(MJPostIncrementExpr e)
 			throws VisitorException {
-		return null;
+		MJType arg = visitExpression(e.getArgument());
+		if(!(arg.isDouble() || arg.isInt()))
+			throw new TypeCheckerException("Must be real number");
+		e.setType(arg);
+		return e.getType();
+				
 	}
 
 	public MJType visitExpression(MJPreIncrementExpr e) throws VisitorException {
-		return null;
+		MJType arg = visitExpression(e.getArgument());
+		if(!(arg.isDouble() || arg.isInt()))
+			throw new TypeCheckerException("Must be real number");
+		e.setType(arg);
+		return e.getType();
 	}
 
 	public MJType visitExpression(MJPostDecrementExpr e)
 			throws VisitorException {
-		return null;
+		MJType arg = visitExpression(e.getArgument());
+		if(!(arg.isDouble() || arg.isInt()))
+			throw new TypeCheckerException("Must be real number");
+		e.setType(arg);
+		return e.getType();
 	}
 
 	public MJType visitExpression(MJPreDecrementExpr e) throws VisitorException {
-		return null;
+		MJType arg = visitExpression(e.getArgument());
+		if(!(arg.isDouble() || arg.isInt()))
+			throw new TypeCheckerException("Must be real number");
+		e.setType(arg);
+		return e.getType();
 	}
 
 	public MJType visitExpression(MJTernary e) throws VisitorException {
-		return null;
+		MJType condition = visitExpression(e.getCondition());
+		
+		if(!condition.isBoolean())
+			throw new TypeCheckerException("The argument must be boolean");
+		if(!visitExpression(e.getTrueExpr()).isSame(visitExpression(e.getFalseExpr())))
+			throw new TypeCheckerException("Arguments must be of same type");
+		
+		e.setType(visitExpression(e.getTrueExpr()));
+		return e.getType();
 	}
 
 	public MJType visitExpression(MJSqrt e) throws VisitorException {
@@ -772,7 +805,12 @@ public class TypeCheck extends IRElementVisitor<MJType> {
 	}
 
 	public MJType visitExpression(MJTypeCast e) throws VisitorException {
-		return null;
+		MJType cast = visitExpression(e.getArgument());
+		MJType type = e.getType();
+		
+		if(!cast.isSame(type))
+			throw new TypeCheckerException("Cast must be the same type as argument");
+		return type;
 	}
 
 	public MJType visitExpression(MJLinq e) throws VisitorException {
